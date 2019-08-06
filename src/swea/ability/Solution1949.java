@@ -5,37 +5,43 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
+/**
+ * SW Expert Academy Problem Solving
+ * 1949. 등산로 조성
+ */
 public class Solution1949 {
-	
-	private static int result;
-	private static int tempResult;
-	private static boolean[][] visit;
+	private static int[] di = {-1, 0, 1, 0};
+	private static int[] dj = {0, 1, 0, -1};
 	private static int N;
-	private static int[] nextI = {-1, 0, 1, 0};
-	private static int[] nextJ = {0, 1, 0, -1};
-	private static int[][] map;
 	private static int K;
 	private static boolean useK = false;
+	private static int[][] map;
+	private static boolean[][] visits;
+	private static int result;
 	
 	public static void main(String[] args) throws IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		StringTokenizer st = new StringTokenizer(br.readLine());
 		
-		int tcCnt = Integer.parseInt(st.nextToken());
-		for(int tcNo = 1; tcNo <= tcCnt; tcNo++) {
+		int T = Integer.parseInt(st.nextToken());
+		for(int tc = 1; tc <= T; tc++) {
 			st = new StringTokenizer(br.readLine());
-			
+			// 맵 크기
 			N = Integer.parseInt(st.nextToken());
+			// 깍을수있는 높이
 			K = Integer.parseInt(st.nextToken());
-			int max = 0;
+			
+			// 시작 높이
+			int maxHeight = 0;
 			map = new int[N][N];
+			visits = new boolean[N][N];
 			for(int i = 0; i < N; i++) {
 				st = new StringTokenizer(br.readLine());
 				for(int j = 0; j < N; j++) {
-					int curr = Integer.parseInt(st.nextToken());
-					map[i][j] = curr;
-					if(curr > max) {
-						max = curr;
+					int height = Integer.parseInt(st.nextToken());
+					 map[i][j] = height;
+					if(height > maxHeight) {
+						maxHeight = height;
 					}
 				}
 			}
@@ -43,69 +49,54 @@ public class Solution1949 {
 			result = 0;
 			for(int i = 0; i < N; i++) {
 				for(int j = 0; j < N; j++) {
-					if(map[i][j] == max) {
-						tempResult = 1;
-						visit = new boolean[N][N];
-						visit[i][j] = true;
-						
-						dfs(i, j);
-						
-						visit[i][j] = false;
+					if(map[i][j] == maxHeight) {
+						dfs(i, j, 0);
 					}
 				}
 			}
 			
-			System.out.println("#" + tcNo + " " + result);
+			System.out.println("#" + tc + " " + result);
 		}
 	}
 	
-	private static void dfs(int i, int j) {
-		int currVal = map[i][j];
+	private static void dfs(int i, int j, int length) {
+		visits[i][j] = true;
+		length++;
+		int height = map[i][j];
+		// 종료 여부
+		boolean last = true;
 		for(int z = 0; z < 4; z++) {
-			int ni = i + nextI[z];
-			int nj = j + nextJ[z];
+			int nextI = i + di[z];
+			int nextJ = j + dj[z];
+			if(nextI < 0 || nextI >= N || nextJ < 0 || nextJ >= N || visits[nextI][nextJ]) {
+				continue;
+			}
 			
-			boolean goNext = false;
-			if(ni >= 0 && ni < N && nj >= 0 && nj < N && !visit[ni][nj]) {
-				int nextVal = map[ni][nj];
-				boolean currUseK = false;
-				if(nextVal < currVal) {
-					goNext = true;
-				} else if(!useK && nextVal - K < currVal) {
-					currUseK = true;
-					goNext = true;
-				}
-				
-				if(goNext) {
-					goNext = true;
-					visit[ni][nj] = true;
-					tempResult++;
-					
-					int originNextVal = 0;
-					if(currUseK) {
-						useK = true;
-						originNextVal = nextVal;
-						map[ni][nj] = currVal - 1;
-					}
-					
-					dfs(ni, nj);
-					
-					if(currUseK) {
-						visit[ni][nj] = false;
-						map[ni][nj] = originNextVal;
-						useK = false;
-					}
-					
-					tempResult--;
-					visit[ni][nj] = false;
-				}
+			int nextHeight = map[nextI][nextJ];
+			
+			// 다음 진행
+			if(height > nextHeight) {
+				dfs(nextI, nextJ, length);
+				last = false;
 			}
-			if(!goNext) {
-				if(tempResult > result) {
-					result = tempResult;
-				}
+			
+			// 높이 깎고 다음 진행
+			if(!useK && height <= nextHeight && nextHeight - K < height) {
+				useK = true;
+				map[nextI][nextJ] = height - 1;
+				dfs(nextI, nextJ, length);
+				map[nextI][nextJ] = nextHeight;
+				useK = false;
+				last = false;
 			}
+			
 		}
+		
+		// 종료 시
+		if(last && result < length) {
+			result = length;
+		}
+		length--;
+		visits[i][j] = false;
 	}
-	
 }
